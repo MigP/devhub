@@ -6,24 +6,27 @@ Track your progress through the Android Developer training programme. Update thi
 
 ## 📊 Overall Progress
 
-**Started:** [Add date]  
-**Current Phase:** Phase 1 - Architecture Foundation  
-**Completion:** 0/18 topics
+**Started:** [Add date]
+**Current Phase:** Phase 1 - Architecture Foundation
+**Completion:** 0/33 topics
 
 ---
 
 ## 🎯 Phase Completion
 
-| Phase                            | Topics | Status        | Completion Date |
-|----------------------------------|--------|---------------|-----------------|
-| Phase 1: Architecture Foundation | 2      | ⬜ Not Started | -               |
-| Phase 2: Modern UI Development   | 3      | ⬜ Not Started | -               |
-| Phase 3: DI & Modularisation     | 2      | ⬜ Not Started | -               |
-| Phase 4: Reactive Programming    | 2      | ⬜ Not Started | -               |
-| Phase 5: Quality & Testing       | 3      | ⬜ Not Started | -               |
-| Phase 6: System Integration      | 3      | ⬜ Not Started | -               |
-| Phase 7: Build System            | 2      | ⬜ Not Started | -               |
-| Phase 8: Cross-Platform          | 1      | ⬜ Not Started | -               |
+| Phase                                    | Topics | Status        | Completion Date |
+|------------------------------------------|--------|---------------|-----------------|
+| Phase 1: Architecture Foundation         | 2      | ⬜ Not Started | -               |
+| Phase 2: Modern UI Development           | 3      | ⬜ Not Started | -               |
+| Phase 3: DI & Modularisation             | 2      | ⬜ Not Started | -               |
+| Phase 4: Reactive Programming            | 2      | ⬜ Not Started | -               |
+| Phase 5: Quality & Testing               | 3      | ⬜ Not Started | -               |
+| Phase 6: System Integration & Security   | 4      | ⬜ Not Started | -               |
+| Phase 7: Build System                    | 2      | ⬜ Not Started | -               |
+| Phase 8: Cross-Platform                  | 1      | ⬜ Not Started | -               |
+| Phase 9: CI/CD & DevOps                  | 6      | ⬜ Not Started | -               |
+| Phase 10: Security Deep Dive             | 4      | ⬜ Not Started | -               |
+| Phase 11: Performance & Advanced Topics  | 4      | ⬜ Not Started | -               |
 
 **Legend:** ⬜ Not Started | 🟡 In Progress | ✅ Complete
 
@@ -569,6 +572,47 @@ Track your progress through the Android Developer training programme. Update thi
 
 ---
 
+#### 6.4 Security Fundamentals
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Use EncryptedSharedPreferences for sensitive data
+- [ ] Understand Android Keystore basics
+- [ ] Secure API keys and secrets
+- [ ] Follow security best practices
+- [ ] Implement runtime permissions properly
+
+**Implementation Checklist:**
+- [ ] EncryptedSharedPreferences implemented
+- [ ] Auth tokens stored securely
+- [ ] API keys in BuildConfig (not hardcoded)
+- [ ] local.properties for secrets
+- [ ] ProGuard rules for release
+- [ ] Runtime permissions handled
+
+**Security Concepts:**
+- [ ] EncryptedSharedPreferences API
+- [ ] Android Keystore System
+- [ ] BuildConfig for API keys
+- [ ] local.properties for secrets
+- [ ] ProGuard/R8 basics
+- [ ] Runtime permissions
+
+**Interview Prep:**
+- [ ] Can explain secure storage options
+- [ ] Can implement EncryptedSharedPreferences
+- [ ] Can discuss API key management
+- [ ] Can show ProGuard configuration
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
 ### Phase 7: Build System & Advanced Kotlin
 
 #### 7.1 Gradle
@@ -661,6 +705,595 @@ Track your progress through the Android Developer training programme. Update thi
 - [ ] Can explain KMM benefits
 - [ ] Can discuss architecture
 - [ ] Can show code sharing
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+### Phase 9: CI/CD & DevOps
+
+#### 9.1 GitHub Actions for Android
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Understand CI/CD principles
+- [ ] Set up GitHub Actions workflows
+- [ ] Automate builds and tests
+- [ ] Configure artifact uploads
+- [ ] Optimise build performance
+
+**Implementation Checklist:**
+- [ ] Basic CI workflow created
+- [ ] Test execution automated
+- [ ] Build caching configured
+- [ ] APK artifacts uploaded
+- [ ] Status badges added to README
+- [ ] Branch protection rules set up
+
+**GitHub Actions Concepts:**
+- [ ] Workflow syntax (YAML)
+- [ ] Jobs and steps
+- [ ] Actions marketplace
+- [ ] Secrets management
+- [ ] Matrix testing
+- [ ] Conditional execution
+- [ ] Caching strategies
+
+**Interview Prep:**
+- [ ] Can explain CI/CD benefits
+- [ ] Can set up workflows from scratch
+- [ ] Can optimise build times
+- [ ] Can troubleshoot CI issues
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 9.2 Automated Testing Pipeline
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Run tests automatically on CI
+- [ ] Set up matrix testing
+- [ ] Generate coverage reports
+- [ ] Upload test results
+- [ ] Fail builds on test failures
+
+**Implementation Checklist:**
+- [ ] Unit tests run on CI
+- [ ] Instrumented tests on emulator
+- [ ] Matrix testing (API 24, 28, 31, 34)
+- [ ] Coverage reports generated
+- [ ] Codecov integration
+- [ ] Test results as artifacts
+
+**Interview Prep:**
+- [ ] Can explain testing strategies
+- [ ] Can configure test pipelines
+- [ ] Can interpret coverage reports
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 9.3 Code Quality Automation
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Enforce code quality standards
+- [ ] Set up static analysis
+- [ ] Configure code formatters
+- [ ] Automate quality checks
+- [ ] Use code review bots
+
+**Implementation Checklist:**
+- [ ] Detekt configured
+- [ ] Ktlint set up
+- [ ] Android Lint running
+- [ ] Quality gates enforced
+- [ ] PR checks automated
+- [ ] Danger bot configured (optional)
+
+**Quality Tools:**
+- [ ] Detekt (static analysis)
+- [ ] Ktlint (formatting)
+- [ ] Android Lint
+- [ ] SonarQube (optional)
+- [ ] Danger (PR automation)
+
+**Interview Prep:**
+- [ ] Can explain static analysis
+- [ ] Can configure quality tools
+- [ ] Can discuss code standards
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 9.4 Automated Releases
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Automate version bumping
+- [ ] Generate release notes
+- [ ] Deploy to distribution channels
+- [ ] Manage app signing
+- [ ] Track releases
+
+**Implementation Checklist:**
+- [ ] Semantic versioning implemented
+- [ ] CHANGELOG auto-generated
+- [ ] APK signing automated
+- [ ] Firebase App Distribution set up
+- [ ] Play Store deployment (optional)
+- [ ] Git tags automated
+
+**Release Concepts:**
+- [ ] Semantic versioning
+- [ ] Release tracks (internal/beta/prod)
+- [ ] APK signing
+- [ ] App bundles (AAB)
+- [ ] Release notes
+
+**Interview Prep:**
+- [ ] Can explain release process
+- [ ] Can discuss deployment strategies
+- [ ] Can configure signing
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 9.5 Dependency Management Automation
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Automate dependency updates
+- [ ] Configure update strategies
+- [ ] Group related updates
+- [ ] Test updates automatically
+- [ ] Manage security patches
+
+**Implementation Checklist:**
+- [ ] Dependabot configured
+- [ ] Update schedule set
+- [ ] Dependency groups defined
+- [ ] Auto-merge rules set
+- [ ] Security alerts enabled
+
+**Tools:**
+- [ ] Dependabot
+- [ ] Renovate (alternative)
+- [ ] Dependency version catalogs
+
+**Interview Prep:**
+- [ ] Can explain dependency management
+- [ ] Can configure automation tools
+- [ ] Can discuss security practices
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 9.6 Build Performance Monitoring
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Monitor build times
+- [ ] Use build scans
+- [ ] Configure build cache
+- [ ] Optimise Gradle settings
+- [ ] Track performance metrics
+
+**Implementation Checklist:**
+- [ ] Gradle caching enabled
+- [ ] Build scans configured
+- [ ] Parallel execution enabled
+- [ ] Configuration cache enabled
+- [ ] Performance tracked over time
+
+**Gradle Optimizations:**
+- [ ] org.gradle.caching=true
+- [ ] org.gradle.parallel=true
+- [ ] org.gradle.configureondemand=true
+- [ ] Increased heap size
+- [ ] Remote build cache (optional)
+
+**Interview Prep:**
+- [ ] Can explain Gradle optimizations
+- [ ] Can interpret build scans
+- [ ] Can reduce build times
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+### Phase 10: Security Deep Dive
+
+#### 10.1 Secure Storage & Encryption
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Use Android Keystore for cryptographic keys
+- [ ] Implement EncryptedSharedPreferences correctly
+- [ ] Encrypt sensitive database content (SQLCipher)
+- [ ] Understand encryption algorithms (AES, RSA)
+- [ ] Handle key rotation and migration
+
+**Implementation Checklist:**
+- [ ] EncryptedSharedPreferences implemented
+- [ ] Database encryption with SQLCipher
+- [ ] Secure file encryption
+- [ ] Biometric authentication for decryption
+- [ ] Key rotation mechanism
+- [ ] Migration from unencrypted data
+
+**Encryption Concepts:**
+- [ ] Android Keystore System
+- [ ] AES encryption (symmetric)
+- [ ] RSA encryption (asymmetric)
+- [ ] Key generation parameters
+- [ ] User authentication requirements
+- [ ] Key attestation
+- [ ] StrongBox support
+
+**Interview Prep:**
+- [ ] Can explain symmetric vs asymmetric encryption
+- [ ] Can implement Android Keystore
+- [ ] Can discuss key management
+- [ ] Can show encryption/decryption code
+- [ ] Can explain SQLCipher benefits
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 10.2 Network Security & SSL Pinning
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Implement SSL/Certificate pinning
+- [ ] Configure Network Security Config
+- [ ] Use OkHttp CertificatePinner
+- [ ] Handle certificate rotation
+- [ ] Debug network security issues
+
+**Implementation Checklist:**
+- [ ] SSL pinning with OkHttp
+- [ ] Network Security Config XML
+- [ ] Certificate pins configured
+- [ ] Emergency pin rotation strategy
+- [ ] Debug certificates for development
+- [ ] Charles/Fiddler proxy setup for testing
+
+**Network Security Concepts:**
+- [ ] SSL/TLS protocols
+- [ ] Certificate pinning (public key pinning)
+- [ ] Certificate chains
+- [ ] Man-in-the-middle attacks
+- [ ] Network Security Configuration
+- [ ] Cleartext traffic blocking
+- [ ] Domain-specific configurations
+
+**Interview Prep:**
+- [ ] Can explain SSL pinning benefits
+- [ ] Can implement certificate pinning
+- [ ] Can discuss MITM attacks
+- [ ] Can configure Network Security Config
+- [ ] Can handle certificate rotation
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 10.3 Authentication & Authorization
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Implement OAuth 2.0 flow
+- [ ] Handle JWT tokens securely
+- [ ] Implement token refresh logic
+- [ ] Use biometric authentication
+- [ ] Implement secure session management
+
+**Implementation Checklist:**
+- [ ] OAuth 2.0 implementation
+- [ ] JWT parsing and validation
+- [ ] Secure token storage
+- [ ] Token refresh mechanism
+- [ ] Biometric authentication (BiometricPrompt)
+- [ ] Session timeout handling
+- [ ] Logout and token revocation
+
+**Auth Concepts:**
+- [ ] OAuth 2.0 flows (Authorization Code, PKCE)
+- [ ] JWT structure and claims
+- [ ] Access tokens vs refresh tokens
+- [ ] BiometricPrompt API
+- [ ] Cryptographic operations with biometrics
+- [ ] Account Manager
+- [ ] Credential Manager API
+
+**Interview Prep:**
+- [ ] Can explain OAuth 2.0 flow
+- [ ] Can implement token management
+- [ ] Can discuss JWT security
+- [ ] Can show biometric authentication
+- [ ] Can handle token refresh
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 10.4 Code Protection & App Integrity
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Configure ProGuard/R8 properly
+- [ ] Implement root detection
+- [ ] Use Play Integrity API
+- [ ] Detect app tampering
+- [ ] Protect against reverse engineering
+
+**Implementation Checklist:**
+- [ ] ProGuard/R8 rules optimized
+- [ ] Root detection implemented
+- [ ] Play Integrity API integrated
+- [ ] Tamper detection mechanisms
+- [ ] Debug build detection
+- [ ] Emulator detection
+- [ ] Code obfuscation verified
+
+**Security Protection Concepts:**
+- [ ] ProGuard/R8 obfuscation
+- [ ] Shrinking and optimization
+- [ ] Root detection techniques
+- [ ] Play Integrity API verdicts
+- [ ] SafetyNet migration
+- [ ] App signing verification
+- [ ] Debug vs release builds
+
+**Interview Prep:**
+- [ ] Can configure ProGuard/R8
+- [ ] Can implement root detection
+- [ ] Can explain Play Integrity API
+- [ ] Can discuss reverse engineering risks
+- [ ] Can show obfuscation results
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+### Phase 11: Performance & Advanced Topics
+
+#### 11.1 Performance Profiling & Optimization
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Master Android Profiler
+- [ ] Profile CPU, memory, network, energy
+- [ ] Detect and fix memory leaks
+- [ ] Optimize app startup time
+- [ ] Use Baseline Profiles
+
+**Implementation Checklist:**
+- [ ] CPU profiling performed
+- [ ] Memory leaks detected and fixed (LeakCanary)
+- [ ] Network requests optimized
+- [ ] App startup optimized
+- [ ] Baseline profiles generated
+- [ ] Jetpack Macrobenchmark set up
+- [ ] Systrace analysis performed
+
+**Profiling Tools:**
+- [ ] Android Studio Profiler
+- [ ] LeakCanary
+- [ ] Macrobenchmark
+- [ ] Baseline Profiles
+- [ ] Systrace
+- [ ] Perfetto
+- [ ] App Startup library
+
+**Performance Metrics:**
+- [ ] App startup time: ___ ms
+- [ ] Frame rendering time: ___ ms
+- [ ] Memory usage (average): ___ MB
+- [ ] APK size: ___ MB
+- [ ] Network request time: ___ ms
+
+**Interview Prep:**
+- [ ] Can use Android Profiler
+- [ ] Can detect memory leaks
+- [ ] Can optimize startup time
+- [ ] Can explain Baseline Profiles
+- [ ] Can show benchmarking results
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 11.2 Offline-First Architecture
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Design offline-first architecture
+- [ ] Implement local-first data strategy
+- [ ] Sync data efficiently
+- [ ] Handle conflicts
+- [ ] Use WorkManager for background sync
+
+**Implementation Checklist:**
+- [ ] Room database as single source of truth
+- [ ] Repository pattern with offline support
+- [ ] WorkManager for sync
+- [ ] Conflict resolution strategy
+- [ ] Network connectivity monitoring
+- [ ] Cache invalidation logic
+- [ ] Offline UI indicators
+
+**Offline-First Concepts:**
+- [ ] Single source of truth pattern
+- [ ] Cache-first strategies
+- [ ] WorkManager constraints
+- [ ] Data synchronization
+- [ ] Conflict resolution
+- [ ] Connectivity monitoring
+- [ ] Exponential backoff
+
+**Interview Prep:**
+- [ ] Can design offline architecture
+- [ ] Can implement data sync
+- [ ] Can handle conflicts
+- [ ] Can use WorkManager
+- [ ] Can discuss trade-offs
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 11.3 Advanced Compose Layouts
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Create custom layouts
+- [ ] Use Layout and SubcomposeLayout
+- [ ] Implement custom measuring/placement
+- [ ] Build complex UI components
+- [ ] Optimize layout performance
+
+**Implementation Checklist:**
+- [ ] Custom Layout implementation
+- [ ] SubcomposeLayout example
+- [ ] Custom measurement logic
+- [ ] Complex grid layout
+- [ ] Flow layout implementation
+- [ ] Performance optimization applied
+
+**Advanced Compose Concepts:**
+- [ ] Layout composable
+- [ ] SubcomposeLayout
+- [ ] Measurable and Placeable
+- [ ] Constraints and IntrinsicSize
+- [ ] Layout modifiers
+- [ ] Custom drawing with Canvas
+- [ ] Graphics layer modifiers
+
+**Interview Prep:**
+- [ ] Can create custom layouts
+- [ ] Can explain measure/layout/draw phases
+- [ ] Can use SubcomposeLayout
+- [ ] Can optimize layout performance
+- [ ] Can draw with Canvas
+
+**Notes:**
+```
+[Add your learnings here]
+```
+
+---
+
+#### 11.4 Animations & Shared Elements
+- Status: ⬜ Not Started
+- Started: -
+- Completed: -
+
+**Learning Goals:**
+- [ ] Master Compose animations
+- [ ] Implement shared element transitions
+- [ ] Create custom animations
+- [ ] Use gesture-based animations
+- [ ] Optimize animation performance
+
+**Implementation Checklist:**
+- [ ] Animate*AsState APIs used
+- [ ] Transition and updateTransition
+- [ ] Shared element transitions
+- [ ] Custom animation specs
+- [ ] Gesture-based animations (dragging, swiping)
+- [ ] Physics-based animations
+- [ ] Animation performance tested
+
+**Animation APIs:**
+- [ ] animateDpAsState, animateFloatAsState, etc.
+- [ ] Transition and updateTransition
+- [ ] AnimatedVisibility
+- [ ] Crossfade
+- [ ] Shared element (experimental)
+- [ ] Animatable
+- [ ] Animation specs (tween, spring, keyframes)
+- [ ] Gesture detection (detectDragGestures, etc.)
+
+**Interview Prep:**
+- [ ] Can implement various animations
+- [ ] Can create shared element transitions
+- [ ] Can build gesture-based interactions
+- [ ] Can discuss animation performance
+- [ ] Can show custom animation specs
 
 **Notes:**
 ```

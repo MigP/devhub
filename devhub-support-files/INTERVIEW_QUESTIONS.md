@@ -1230,6 +1230,124 @@ class FirebaseAnalyticsTracker @Inject constructor(
 
 ---
 
+### Security Fundamentals
+
+#### 🟢 How do you store sensitive data on Android?
+**Expected Answer:**
+- **EncryptedSharedPreferences:** For key-value pairs
+- **Room with SQLCipher:** For database encryption
+- **Android Keystore:** For cryptographic keys
+- **Never:** Hardcode secrets in code
+
+```kotlin
+val masterKey = MasterKey.Builder(context)
+    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+    .build()
+
+val encryptedPrefs = EncryptedSharedPreferences.create(
+    context,
+    "secret_prefs",
+    masterKey,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+)
+
+encryptedPrefs.edit().putString("auth_token", token).apply()
+```
+
+---
+
+#### 🟡 How do you manage API keys securely?
+**Expected Answer:**
+
+**1. local.properties:**
+```properties
+# local.properties (git-ignored)
+API_KEY=your_key_here
+```
+
+**2. build.gradle.kts:**
+```kotlin
+android {
+    buildTypes {
+        all {
+            val properties = Properties()
+            properties.load(project.rootProject.file("local.properties").inputStream())
+            buildConfigField("String", "API_KEY", "\"${properties.getProperty("API_KEY")}\"")
+        }
+    }
+}
+```
+
+**3. Usage:**
+```kotlin
+val apiKey = BuildConfig.API_KEY
+```
+
+**Never:**
+- Hardcode in source
+- Commit to version control
+- Log keys
+
+---
+
+#### 🟡 What is Android Keystore?
+**Expected Answer:**
+- Hardware-backed key storage
+- Keys never leave secure hardware
+- Used for encryption/decryption
+- Cannot be extracted
+- Survives app uninstall (optional)
+
+**Use cases:**
+- Encrypting user data
+- Signing authentication tokens
+- Biometric authentication
+- Certificate pinning
+
+---
+
+#### 🔴 How do you handle ProGuard/R8 for release builds?
+**Expected Answer:**
+```kotlin
+buildTypes {
+    release {
+        isMinifyEnabled = true
+        isShrinkResources = true
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+    }
+}
+```
+
+**proguard-rules.pro:**
+```
+# Keep models used with Gson/Moshi
+-keep class com.devhub.models.** { *; }
+
+# Keep Retrofit interfaces
+-keep interface com.devhub.api.** { *; }
+
+# Keep Hilt generated classes
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+
+# Keep custom views
+-keep public class * extends android.view.View {
+    public <init>(android.content.Context);
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+```
+
+**Testing:**
+- Test release builds thoroughly
+- Use mapping file to deobfuscate crashes
+- Check APK with APK Analyzer
+
+---
+
 ## Phase 7: Build System
 
 ### Gradle
@@ -1449,6 +1567,1105 @@ actual class Platform {
 - UI ❌
 - Platform-specific APIs ❌
 - Navigation ❌
+
+---
+
+## Phase 9: CI/CD & DevOps
+
+### GitHub Actions for Android
+
+#### 🟢 What is CI/CD?
+**Expected Answer:**
+- **CI (Continuous Integration):** Automatically build and test code on every commit
+- **CD (Continuous Deployment):** Automatically deploy to production/distribution
+- Catch bugs early
+- Faster feedback
+- Consistent builds
+- Automated workflows
+
+---
+
+#### 🟡 How do you set up GitHub Actions for Android?
+**Expected Answer:**
+```yaml
+name: Android CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    - name: Run tests
+      run: ./gradlew test
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app
+        path: app/build/outputs/apk/debug/app-debug.apk
+```
+
+---
+
+#### 🔴 How do you handle secrets in CI/CD?
+**Expected Answer:**
+
+**GitHub Secrets:**
+1. Repository Settings → Secrets → New secret
+2. Add: `API_KEY`, `KEYSTORE_PASSWORD`, etc.
+
+**Usage in workflow:**
+```yaml
+- name: Build Release APK
+  env:
+    API_KEY: ${{ secrets.API_KEY }}
+    KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+  run: ./gradlew assembleRelease
+```
+
+**For local.properties:**
+```yaml
+- name: Create local.properties
+  run: |
+    echo "API_KEY=${{ secrets.API_KEY }}" > local.properties
+```
+
+**Never:**
+- Commit secrets to repo
+- Log secrets in CI output
+- Use secrets in pull requests from forks (disabled by default)
+
+---
+
+### Automated Testing Pipeline
+
+#### 🟡 How do you run instrumented tests on CI?
+**Expected Answer:**
+```yaml
+test:
+  runs-on: macos-latest
+
+  steps:
+  - uses: actions/checkout@v3
+
+  - name: Run instrumented tests
+    uses: reactivecircus/android-emulator-runner@v2
+    with:
+      api-level: 31
+      arch: x86_64
+      profile: pixel_6
+      script: ./gradlew connectedCheck
+```
+
+**Note:** macOS runners have hardware acceleration for emulators
+
+---
+
+#### 🔴 How do you implement matrix testing across API levels?
+**Expected Answer:**
+```yaml
+test:
+  runs-on: macos-latest
+  strategy:
+    matrix:
+      api-level: [24, 28, 31, 34]
+
+  steps:
+  - uses: actions/checkout@v3
+
+  - name: Test on API ${{ matrix.api-level }}
+    uses: reactivecircus/android-emulator-runner@v2
+    with:
+      api-level: ${{ matrix.api-level }}
+      script: ./gradlew connectedCheck
+```
+
+**Benefits:**
+- Test on multiple Android versions
+- Catch version-specific bugs
+- Parallel execution
+
+**Trade-offs:**
+- Longer CI times
+- More CI minutes consumed
+- Use caching to optimize
+
+---
+
+### Code Quality Automation
+
+#### 🟡 What static analysis tools do you use for Android?
+**Expected Answer:**
+
+**1. Detekt (Kotlin static analysis):**
+```kotlin
+// build.gradle.kts
+plugins {
+    id("io.gitlab.arturbosch.detekt") version "1.23.0"
+}
+
+detekt {
+    config = files("$rootDir/config/detekt/detekt.yml")
+    buildUponDefaultConfig = true
+}
+```
+
+**2. Ktlint (Kotlin formatting):**
+```kotlin
+plugins {
+    id("org.jlleitschuh.gradle.ktlint") version "11.5.0"
+}
+```
+
+**3. Android Lint:**
+```kotlin
+android {
+    lint {
+        abortOnError = true
+        warningsAsErrors = true
+    }
+}
+```
+
+**CI Integration:**
+```yaml
+- name: Run code quality checks
+  run: |
+    ./gradlew detekt
+    ./gradlew ktlintCheck
+    ./gradlew lint
+```
+
+---
+
+#### 🔴 How do you enforce code quality in pull requests?
+**Expected Answer:**
+
+**1. Branch protection rules:**
+- Require status checks to pass
+- Require reviews
+- No direct push to main
+
+**2. GitHub Actions:**
+```yaml
+name: Code Quality
+
+on: pull_request
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Detekt
+      run: ./gradlew detekt
+
+    - name: Ktlint
+      run: ./gradlew ktlintCheck
+
+    - name: Lint
+      run: ./gradlew lintDebug
+
+    - name: Tests
+      run: ./gradlew testDebugUnitTest
+```
+
+**3. Fail on violations:**
+- Configure tools to fail build
+- Upload reports as artifacts
+- Comment on PR with issues
+
+---
+
+### Automated Releases
+
+#### 🟡 How do you automate versioning?
+**Expected Answer:**
+
+**Semantic Versioning:**
+```kotlin
+// build.gradle.kts
+android {
+    val versionMajor = 1
+    val versionMinor = 2
+    val versionPatch = 3
+    val versionBuild = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 0
+
+    defaultConfig {
+        versionCode = versionMajor * 10000 + versionMinor * 1000 +
+                      versionPatch * 100 + versionBuild
+        versionName = "$versionMajor.$versionMinor.$versionPatch"
+    }
+}
+```
+
+**Git tags:**
+```yaml
+- name: Create Release
+  if: github.ref == 'refs/heads/main'
+  run: |
+    git tag v${{ env.VERSION }}
+    git push origin v${{ env.VERSION }}
+```
+
+---
+
+#### 🔴 How do you automate deployment to Firebase App Distribution?
+**Expected Answer:**
+```yaml
+- name: Build Release APK
+  run: ./gradlew assembleRelease
+
+- name: Upload to Firebase App Distribution
+  uses: wzieba/Firebase-Distribution-Github-Action@v1
+  with:
+    appId: ${{ secrets.FIREBASE_APP_ID }}
+    serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIALS }}
+    groups: testers
+    file: app/build/outputs/apk/release/app-release.apk
+    releaseNotes: |
+      Changes in this release:
+      ${{ github.event.head_commit.message }}
+```
+
+**Benefits:**
+- Automatic distribution to testers
+- Release notes from commits
+- Track versions
+- Crash reports
+
+---
+
+### Build Performance Monitoring
+
+#### 🟡 What Gradle optimizations improve build speed?
+**Expected Answer:**
+
+**gradle.properties:**
+```properties
+org.gradle.parallel=true
+org.gradle.caching=true
+org.gradle.configureondemand=true
+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m
+org.gradle.daemon=true
+
+# Kotlin
+kotlin.incremental=true
+kotlin.daemon.jvmargs=-Xmx2g
+
+# AndroidX
+android.useAndroidX=true
+android.enableJetifier=false
+```
+
+**Configuration cache:**
+```yaml
+- name: Build with configuration cache
+  run: ./gradlew build --configuration-cache
+```
+
+---
+
+#### 🔴 How do you track build performance over time?
+**Expected Answer:**
+
+**1. Gradle Build Scans:**
+```kotlin
+// settings.gradle.kts
+plugins {
+    id("com.gradle.enterprise") version "3.14"
+}
+
+gradleEnterprise {
+    buildScan {
+        termsOfServiceUrl = "https://gradle.com/terms-of-service"
+        termsOfServiceAgree = "yes"
+    }
+}
+```
+
+**2. CI metrics:**
+```yaml
+- name: Build with metrics
+  run: |
+    time ./gradlew assembleDebug --scan
+```
+
+**3. Track over time:**
+- Store build times in database
+- Create dashboard
+- Alert on regressions
+- Compare branches
+
+**Key metrics:**
+- Configuration time
+- Task execution time
+- Cache hit rate
+- Incremental build time
+
+---
+
+## Phase 10: Security Deep Dive
+
+### Secure Storage & Encryption
+
+#### 🟡 Explain symmetric vs asymmetric encryption
+**Expected Answer:**
+
+**Symmetric (AES):**
+- Same key for encrypt/decrypt
+- Fast
+- Good for large data
+- Example: File encryption
+
+```kotlin
+val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+keyGenerator.init(
+    KeyGenParameterSpec.Builder(
+        "MyKeyAlias",
+        KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+    )
+    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+    .build()
+)
+val secretKey = keyGenerator.generateKey()
+```
+
+**Asymmetric (RSA):**
+- Public key encrypts, private key decrypts
+- Slower
+- Good for small data
+- Example: Key exchange, signatures
+
+```kotlin
+val keyPairGenerator = KeyPairGenerator.getInstance(
+    KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore"
+)
+keyPairGenerator.initialize(
+    KeyGenParameterSpec.Builder(
+        "MyKeyAlias",
+        KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+    )
+    .setKeySize(2048)
+    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+    .build()
+)
+val keyPair = keyPairGenerator.generateKeyPair()
+```
+
+---
+
+#### 🔴 How do you implement database encryption with SQLCipher?
+**Expected Answer:**
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    implementation("androidx.sqlite:sqlite:2.3.1")
+}
+
+// Database
+@Database(entities = [Article::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun articleDao(): ArticleDao
+
+    companion object {
+        fun create(context: Context): AppDatabase {
+            val passphrase = getOrCreatePassphrase(context)
+            val factory = SupportFactory(SQLiteDatabase.getBytes(passphrase))
+
+            return Room.databaseBuilder(
+                context,
+                AppDatabase::class.java,
+                "app.db"
+            )
+            .openHelperFactory(factory)
+            .build()
+        }
+
+        private fun getOrCreatePassphrase(context: Context): CharArray {
+            // Store passphrase in EncryptedSharedPreferences
+            // Or use Android Keystore
+        }
+    }
+}
+```
+
+**Key points:**
+- Passphrase stored securely
+- All tables encrypted
+- Small performance overhead
+- Protects against device access
+
+---
+
+### Network Security & SSL Pinning
+
+#### 🟡 What is certificate pinning? Why use it?
+**Expected Answer:**
+**What:**
+- Pin specific certificate or public key
+- Reject connections if certificate doesn't match
+- Prevents MITM attacks even with compromised CAs
+
+**Why:**
+- Extra security for sensitive apps (banking, healthcare)
+- Protection against CA compromise
+- Ensure talking to right server
+
+**Trade-offs:**
+- Certificate rotation requires app update
+- Need backup pins
+- Can break during debugging
+
+---
+
+#### 🔴 How do you implement SSL pinning with OkHttp?
+**Expected Answer:**
+```kotlin
+val certificatePinner = CertificatePinner.Builder()
+    .add(
+        "api.devhub.com",
+        "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    )
+    .add(
+        "api.devhub.com", // Backup pin
+        "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="
+    )
+    .build()
+
+val client = OkHttpClient.Builder()
+    .certificatePinner(certificatePinner)
+    .build()
+```
+
+**Get certificate pin:**
+```bash
+openssl s_client -connect api.devhub.com:443 | \
+  openssl x509 -pubkey -noout | \
+  openssl pkey -pubin -outform der | \
+  openssl dgst -sha256 -binary | \
+  openssl enc -base64
+```
+
+**Network Security Config (alternative):**
+```xml
+<!-- res/xml/network_security_config.xml -->
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains="true">api.devhub.com</domain>
+        <pin-set expiration="2025-12-31">
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>
+```
+
+---
+
+### Authentication & Authorization
+
+#### 🟡 Explain the OAuth 2.0 flow for mobile apps
+**Expected Answer:**
+
+**Authorization Code Flow with PKCE:**
+
+1. **Generate code verifier and challenge:**
+```kotlin
+val codeVerifier = generateCodeVerifier() // Random string
+val codeChallenge = base64UrlEncode(sha256(codeVerifier))
+```
+
+2. **Redirect to authorization URL:**
+```kotlin
+val authUrl = "https://auth.devhub.com/authorize?" +
+    "client_id=YOUR_CLIENT_ID&" +
+    "redirect_uri=devhub://callback&" +
+    "response_type=code&" +
+    "code_challenge=$codeChallenge&" +
+    "code_challenge_method=S256&" +
+    "scope=read write"
+
+// Open in Custom Tab or browser
+```
+
+3. **Receive authorization code:**
+```kotlin
+// Handle deep link: devhub://callback?code=AUTH_CODE
+```
+
+4. **Exchange code for tokens:**
+```kotlin
+val response = api.getToken(
+    grant_type = "authorization_code",
+    code = authCode,
+    code_verifier = codeVerifier,
+    redirect_uri = "devhub://callback"
+)
+
+val accessToken = response.access_token
+val refreshToken = response.refresh_token
+```
+
+**PKCE benefits:**
+- Prevents authorization code interception
+- No client secret needed
+- Secure for public clients
+
+---
+
+#### 🔴 How do you implement biometric authentication?
+**Expected Answer:**
+```kotlin
+class BiometricAuthenticator(private val context: Context) {
+
+    fun authenticate(
+        onSuccess: (BiometricPrompt.AuthenticationResult) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val executor = ContextCompat.getMainExecutor(context)
+
+        val biometricPrompt = BiometricPrompt(
+            context as FragmentActivity,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(
+                    result: BiometricPrompt.AuthenticationResult
+                ) {
+                    onSuccess(result)
+                }
+
+                override fun onAuthenticationError(
+                    errorCode: Int,
+                    errString: CharSequence
+                ) {
+                    onError(errString.toString())
+                }
+            }
+        )
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Authenticate to access DevHub")
+            .setSubtitle("Use your fingerprint or face")
+            .setNegativeButtonText("Cancel")
+            .setAllowedAuthenticators(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
+            .build()
+
+        // Check if biometric available
+        val biometricManager = BiometricManager.from(context)
+        when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> {
+                biometricPrompt.authenticate(promptInfo)
+            }
+            else -> {
+                onError("Biometric not available")
+            }
+        }
+    }
+
+    // Use with CryptoObject for encryption
+    fun authenticateWithCrypto(cipher: Cipher, onSuccess: (Cipher) -> Unit) {
+        val cryptoObject = BiometricPrompt.CryptoObject(cipher)
+        // ... authenticate with cryptoObject
+    }
+}
+```
+
+---
+
+### Code Protection & App Integrity
+
+#### 🟡 What is the Play Integrity API?
+**Expected Answer:**
+- Replaces SafetyNet
+- Checks app integrity
+- Detects tampering
+- Verifies device is genuine
+
+**Verdicts:**
+- **Device:** Play Protect status, device recognition
+- **App:** Installed from Play Store, not tampered
+- **Account:** User account status
+
+**Implementation:**
+```kotlin
+val integrityManager = IntegrityManagerFactory.create(context)
+
+val tokenRequest = IntegrityTokenRequest.builder()
+    .setCloudProjectNumber(PROJECT_NUMBER)
+    .setNonce(generateNonce())
+    .build()
+
+integrityManager.requestIntegrityToken(tokenRequest)
+    .addOnSuccessListener { response ->
+        val token = response.token()
+        // Send to your server for verification
+    }
+```
+
+---
+
+#### 🔴 How do you detect root/jailbreak?
+**Expected Answer:**
+
+**Detection methods:**
+```kotlin
+object RootDetection {
+
+    fun isRooted(): Boolean {
+        return checkBuildTags() ||
+               checkSuperuserApk() ||
+               checkSuBinary() ||
+               checkRWPaths()
+    }
+
+    private fun checkBuildTags(): Boolean {
+        return Build.TAGS?.contains("test-keys") == true
+    }
+
+    private fun checkSuperuserApk(): Boolean {
+        val packages = listOf(
+            "com.noshufou.android.su",
+            "com.thirdparty.superuser",
+            "eu.chainfire.supersu",
+            "com.koushikdutta.superuser"
+        )
+        return packages.any { isPackageInstalled(it) }
+    }
+
+    private fun checkSuBinary(): Boolean {
+        val paths = listOf(
+            "/system/app/Superuser.apk",
+            "/system/xbin/su",
+            "/system/bin/su",
+            "/sbin/su",
+            "/data/local/su"
+        )
+        return paths.any { File(it).exists() }
+    }
+
+    private fun checkRWPaths(): Boolean {
+        val paths = listOf("/system", "/system/bin", "/system/sbin")
+        return paths.any { canWriteToPath(it) }
+    }
+}
+```
+
+**Note:** Determined attackers can bypass these. Use as deterrent, not absolute security.
+
+**Better approach:** Play Integrity API + server-side verification
+
+---
+
+## Phase 11: Performance & Advanced Topics
+
+### Performance Profiling & Optimization
+
+#### 🟡 What tools do you use to profile Android apps?
+**Expected Answer:**
+
+**1. Android Studio Profiler:**
+- CPU: Method tracing, sampling
+- Memory: Heap dumps, allocation tracking
+- Network: Request monitoring
+- Energy: Battery usage
+
+**2. LeakCanary:**
+```kotlin
+// Automatic setup in debug builds
+dependencies {
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+}
+```
+
+**3. Macrobenchmark:**
+```kotlin
+@RunWith(AndroidJUnit4::class)
+class StartupBenchmark {
+    @get:Rule
+    val benchmarkRule = MacrobenchmarkRule()
+
+    @Test
+    fun startup() = benchmarkRule.measureRepeated(
+        packageName = "com.devhub",
+        metrics = listOf(StartupTimingMetric()),
+        iterations = 5,
+        startupMode = StartupMode.COLD
+    ) {
+        pressHome()
+        startActivityAndWait()
+    }
+}
+```
+
+**4. Baseline Profiles:**
+- Pre-compile critical paths
+- Improve startup time
+- Generate from Macrobenchmark
+
+---
+
+#### 🔴 How do you optimize app startup time?
+**Expected Answer:**
+
+**1. Lazy initialization:**
+```kotlin
+class App : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        // Essential only
+        Timber.plant(Timber.DebugTree())
+
+        // Lazy init on background
+        lifecycleScope.launch(Dispatchers.Default) {
+            initAnalytics()
+            initCrashReporting()
+        }
+    }
+}
+```
+
+**2. Content Provider elimination:**
+```xml
+<provider
+    android:name="androidx.startup.InitializationProvider"
+    android:authorities="${applicationId}.androidx-startup"
+    tools:node="remove" />
+```
+
+**3. Baseline Profiles:**
+```kotlin
+// Generate profile
+./gradlew :app:generateBaselineProfile
+
+// Profile installed automatically on first launch
+```
+
+**4. App Startup library:**
+```kotlin
+class AnalyticsInitializer : Initializer<Analytics> {
+    override fun create(context: Context): Analytics {
+        return Analytics.getInstance(context)
+    }
+
+    override fun dependencies(): List<Class<out Initializer<*>>> {
+        return emptyList()
+    }
+}
+```
+
+**Measure:**
+- Reportfully.startTime
+- Time to initial display (TTID)
+- Time to full display (TTFD)
+
+---
+
+### Offline-First Architecture
+
+#### 🟡 What is offline-first architecture?
+**Expected Answer:**
+- Local database is single source of truth
+- Network updates database
+- UI always reads from database
+- Works offline automatically
+- Sync when connected
+
+**Benefits:**
+- Fast app (no network wait)
+- Works offline
+- Better user experience
+- Resilient to poor network
+
+---
+
+#### 🔴 How do you implement data synchronization?
+**Expected Answer:**
+
+**Repository pattern:**
+```kotlin
+class ArticleRepository(
+    private val api: ArticleApi,
+    private val dao: ArticleDao,
+    private val workManager: WorkManager
+) {
+    // Single source of truth
+    fun observeArticles(): Flow<List<Article>> {
+        return dao.observeAll()
+    }
+
+    // Refresh from network
+    suspend fun refresh() {
+        try {
+            val articles = api.getArticles()
+            dao.insertAll(articles)
+        } catch (e: IOException) {
+            // Continue with cached data
+        }
+    }
+
+    // Create article (sync later)
+    suspend fun createArticle(article: Article) {
+        // 1. Save locally immediately
+        dao.insert(article.copy(syncStatus = SyncStatus.PENDING))
+
+        // 2. Schedule sync
+        val work = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+
+        workManager.enqueue(work)
+    }
+}
+
+// Worker for background sync
+class SyncWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result {
+        return try {
+            val pendingArticles = dao.getPending()
+            pendingArticles.forEach { article ->
+                api.createArticle(article)
+                dao.update(article.copy(syncStatus = SyncStatus.SYNCED))
+            }
+            Result.success()
+        } catch (e: Exception) {
+            Result.retry()
+        }
+    }
+}
+```
+
+**Conflict resolution:**
+- Last write wins
+- Server wins
+- Client wins
+- Merge strategies
+- Timestamp comparison
+
+---
+
+### Advanced Compose Layouts
+
+#### 🔴 How do you create a custom Layout in Compose?
+**Expected Answer:**
+```kotlin
+@Composable
+fun CustomColumn(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+        // Measure children
+        val placeables = measurables.map { measurable ->
+            measurable.measure(constraints.copy(minHeight = 0))
+        }
+
+        // Calculate layout height
+        val height = placeables.sumOf { it.height }
+
+        // Set size and position children
+        layout(constraints.maxWidth, height) {
+            var yPosition = 0
+            placeables.forEach { placeable ->
+                placeable.placeRelative(x = 0, y = yPosition)
+                yPosition += placeable.height
+            }
+        }
+    }
+}
+```
+
+**Key concepts:**
+- `measurables`: Children to measure
+- `constraints`: Size constraints
+- `measure()`: Get placeable
+- `layout()`: Set size and place children
+
+---
+
+#### 🔴 When would you use SubcomposeLayout?
+**Expected Answer:**
+**Use when:** Need to measure some children to determine layout of others
+
+**Example: Custom TabRow**
+```kotlin
+@Composable
+fun CustomTabRow(
+    selectedIndex: Int,
+    tabs: @Composable () -> Unit
+) {
+    SubcomposeLayout { constraints ->
+        // 1. Measure tabs first
+        val tabMeasurables = subcompose("tabs", tabs)
+        val tabPlaceables = tabMeasurables.map {
+            it.measure(constraints.copy(minWidth = 0, minHeight = 0))
+        }
+
+        val tabWidth = tabPlaceables[selectedIndex].width
+
+        // 2. Now measure indicator with exact width
+        val indicator = subcompose("indicator") {
+            Indicator(width = tabWidth.toDp())
+        }[0].measure(constraints)
+
+        // 3. Layout
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            tabPlaceables.forEachIndexed { index, placeable ->
+                placeable.place(x = index * placeable.width, y = 0)
+            }
+            indicator.place(x = selectedIndex * tabWidth, y = tabHeight)
+        }
+    }
+}
+```
+
+**Use cases:**
+- Adaptive layouts
+- Dependent measurements
+- Dynamic composition
+
+---
+
+### Animations & Shared Elements
+
+#### 🟡 What animation APIs does Compose provide?
+**Expected Answer:**
+
+**1. Animate*AsState (Simple):**
+```kotlin
+val alpha by animateFloatAsState(
+    targetValue = if (visible) 1f else 0f,
+    label = "alpha"
+)
+
+Box(modifier = Modifier.alpha(alpha))
+```
+
+**2. Transition (Multiple properties):**
+```kotlin
+val transition = updateTransition(state, label = "state")
+
+val alpha by transition.animateFloat(label = "alpha") { state ->
+    if (state) 1f else 0f
+}
+
+val scale by transition.animateFloat(label = "scale") { state ->
+    if (state) 1f else 0.8f
+}
+```
+
+**3. Animatable (Manual control):**
+```kotlin
+val offset = remember { Animatable(0f) }
+
+LaunchedEffect(Unit) {
+    offset.animateTo(
+        targetValue = 100f,
+        animationSpec = spring(dampingRatio = 0.5f)
+    )
+}
+```
+
+**4. AnimatedVisibility:**
+```kotlin
+AnimatedVisibility(
+    visible = visible,
+    enter = fadeIn() + slideInVertically(),
+    exit = fadeOut() + slideOutVertically()
+) {
+    Content()
+}
+```
+
+---
+
+#### 🔴 How do you implement shared element transitions?
+**Expected Answer:**
+```kotlin
+// List screen
+@Composable
+fun ArticleList(navController: NavController) {
+    LazyColumn {
+        items(articles) { article ->
+            SharedTransitionScope.rememberSharedContentState(
+                key = "article-${article.id}"
+            ).let { sharedContentState ->
+                ArticleCard(
+                    article = article,
+                    modifier = Modifier
+                        .sharedElement(
+                            sharedContentState,
+                            animatedVisibilityScope = this@AnimatedVisibility
+                        )
+                        .clickable {
+                            navController.navigate("article/${article.id}")
+                        }
+                )
+            }
+        }
+    }
+}
+
+// Detail screen
+@Composable
+fun ArticleDetail(articleId: String) {
+    val sharedContentState = SharedTransitionScope.rememberSharedContentState(
+        key = "article-$articleId"
+    )
+
+    Column {
+        Image(
+            painter = painterResource(article.image),
+            modifier = Modifier
+                .sharedElement(
+                    sharedContentState,
+                    animatedVisibilityScope = this@AnimatedVisibility
+                )
+        )
+        // Rest of detail
+    }
+}
+```
+
+**Key requirements:**
+- Same shared element key
+- SharedTransitionScope
+- AnimatedVisibilityScope
 
 ---
 

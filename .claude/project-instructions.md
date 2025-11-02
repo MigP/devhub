@@ -442,6 +442,64 @@ sealed class AnalyticsEvent {
 }
 ```
 
+#### Topic 6.4: Security Fundamentals
+**Goal**: Introduction to Android security basics
+
+**Claude Code Instructions**:
+- Never hardcode secrets (API keys, passwords)
+- Use EncryptedSharedPreferences for sensitive data
+- Understand Android Keystore basics
+- Implement basic authentication flows
+- Follow OWASP Mobile Top 10
+
+**Basic Security Checklist**:
+- [ ] No hardcoded API keys in code
+- [ ] Sensitive data encrypted at rest
+- [ ] Network traffic uses HTTPS
+- [ ] Authentication tokens stored securely
+- [ ] ProGuard/R8 enabled for release builds
+
+**Simple Secure Storage Example**:
+```kotlin
+// Use EncryptedSharedPreferences for sensitive data
+val masterKey = MasterKey.Builder(context)
+    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+    .build()
+
+val securePrefs = EncryptedSharedPreferences.create(
+    context,
+    "secure_prefs",
+    masterKey,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+)
+
+// Store auth token securely
+securePrefs.edit().putString("auth_token", token).apply()
+```
+
+**API Key Management**:
+```kotlin
+// Never do this:
+// const val API_KEY = "sk_live_12345"  ❌
+
+// Instead: Use BuildConfig with secrets in local.properties
+android {
+    buildTypes {
+        debug {
+            buildConfigField("String", "API_KEY", "\"${project.properties["DEV_API_KEY"]}\"")
+        }
+        release {
+            buildConfigField("String", "API_KEY", "\"${project.properties["PROD_API_KEY"]}\"")
+        }
+    }
+}
+
+// Access via: BuildConfig.API_KEY
+```
+
+**Note**: Phase 10 will cover advanced security topics in depth (SSL pinning, root detection, code obfuscation, etc.)
+
 ---
 
 ### Phase 7: Build System (Weeks 13-14)
@@ -539,6 +597,1051 @@ shared/
 └── iosMain/
     └── kotlin/                    # iOS-specific (future)
 ```
+
+---
+
+### Phase 9: CI/CD & DevOps (Weeks 15-16)
+
+#### Topic 9.1: GitHub Actions for Android
+**Goal**: Automate builds, tests, and deployments
+
+**Claude Code Instructions**:
+- Set up GitHub Actions workflows for Android
+- Automate builds on every push/PR
+- Run tests automatically
+- Generate and upload build artifacts
+- Configure proper caching for faster builds
+
+**Workflow Structure**:
+```yaml
+# .github/workflows/android-ci.yml
+name: Android CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Run tests
+        run: ./gradlew test
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Practice Tasks**:
+1. Set up basic CI workflow
+2. Add unit test execution
+3. Configure build caching
+4. Upload build artifacts
+5. Add status badges to README
+
+#### Topic 9.2: Automated Testing Pipeline
+**Goal**: Run comprehensive tests automatically
+
+**Claude Code Instructions**:
+- Configure test execution in CI
+- Set up matrix testing for multiple API levels
+- Generate test coverage reports
+- Upload test results as artifacts
+- Fail builds on test failures
+
+**Test Workflow Example**:
+```yaml
+test:
+  runs-on: macos-latest
+  strategy:
+    matrix:
+      api-level: [24, 28, 31, 34]
+  steps:
+    - uses: actions/checkout@v3
+    - name: Run instrumented tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        script: ./gradlew connectedAndroidTest
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-api-${{ matrix.api-level }}
+        path: app/build/reports/androidTests/
+```
+
+**Coverage Reporting**:
+```yaml
+- name: Generate coverage report
+  run: ./gradlew jacocoTestReport
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v3
+  with:
+    files: ./app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+```
+
+#### Topic 9.3: Code Quality Automation
+**Goal**: Enforce code quality standards automatically
+
+**Claude Code Instructions**:
+- Set up Detekt for static analysis
+- Configure Ktlint for code formatting
+- Add lint checks to CI pipeline
+- Use Danger bot for PR reviews
+- Fail builds on quality issues
+
+**Quality Checks Workflow**:
+```yaml
+quality:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+    - name: Run Detekt
+      run: ./gradlew detekt
+    - name: Run Ktlint
+      run: ./gradlew ktlintCheck
+    - name: Run Android Lint
+      run: ./gradlew lint
+    - name: Upload lint reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: lint-reports
+        path: |
+          app/build/reports/detekt/
+          app/build/reports/ktlint/
+          app/build/reports/lint-results.html
+```
+
+**Detekt Configuration** (`detekt.yml`):
+```yaml
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+complexity:
+  LongMethod:
+    threshold: 60
+  ComplexMethod:
+    threshold: 15
+
+style:
+  MagicNumber:
+    ignoreNumbers: ['-1', '0', '1', '2']
+```
+
+#### Topic 9.4: Automated Releases
+**Goal**: Automate versioning and deployment
+
+**Claude Code Instructions**:
+- Implement semantic versioning
+- Auto-generate CHANGELOG from commits
+- Deploy to Play Store (internal/beta/production)
+- Distribute to Firebase App Distribution
+- Tag releases automatically
+
+**Release Workflow**:
+```yaml
+release:
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main'
+  steps:
+    - uses: actions/checkout@v3
+    - name: Bump version
+      id: bump
+      uses: anothrNick/github-tag-action@1.36.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+    - name: Build Release APK
+      run: ./gradlew assembleRelease
+    - name: Sign APK
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+    - name: Deploy to Play Store
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        packageName: com.migpapps.devhub
+        releaseFiles: app/build/outputs/apk/release/*.apk
+        track: internal
+```
+
+**Firebase App Distribution**:
+```yaml
+- name: Upload to Firebase App Distribution
+  uses: wzieba/Firebase-Distribution-Github-Action@v1
+  with:
+    appId: ${{ secrets.FIREBASE_APP_ID }}
+    token: ${{ secrets.FIREBASE_TOKEN }}
+    groups: testers
+    file: app/build/outputs/apk/release/app-release.apk
+```
+
+#### Topic 9.5: Dependency Management Automation
+**Goal**: Keep dependencies up-to-date automatically
+
+**Claude Code Instructions**:
+- Set up Dependabot or Renovate
+- Configure automatic PR creation for updates
+- Group dependencies logically
+- Set up auto-merge for minor updates
+- Test updates before merging
+
+**Dependabot Configuration** (`.github/dependabot.yml`):
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+      compose:
+        patterns:
+          - "androidx.compose*"
+      test:
+        patterns:
+          - "*junit*"
+          - "*mockk*"
+          - "*turbine*"
+```
+
+**Renovate Configuration** (`renovate.json`):
+```json
+{
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    }
+  ],
+  "gradle": {
+    "enabled": true
+  }
+}
+```
+
+#### Topic 9.6: Build Performance Monitoring
+**Goal**: Track and optimize build times
+
+**Claude Code Instructions**:
+- Monitor build times in CI
+- Use Gradle build scans
+- Configure remote build cache
+- Optimize Gradle settings
+- Track performance metrics
+
+**Gradle Configuration** (`gradle.properties`):
+```properties
+# Enable caching
+org.gradle.caching=true
+org.gradle.parallel=true
+org.gradle.configureondemand=true
+
+# Increase heap size
+org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m
+
+# Enable build scan
+org.gradle.buildScan=true
+```
+
+**Build Scan Integration**:
+```yaml
+- name: Build with Gradle
+  run: ./gradlew build --scan
+  env:
+    GRADLE_OPTS: "-Dorg.gradle.caching=true"
+```
+
+---
+
+**Practice Checklist for Phase 9**:
+- [ ] Set up basic GitHub Actions CI workflow
+- [ ] Add automated testing (unit + instrumented)
+- [ ] Configure code quality checks (Detekt, Ktlint, Lint)
+- [ ] Set up test coverage reporting
+- [ ] Implement semantic versioning
+- [ ] Configure Firebase App Distribution
+- [ ] Set up Play Store deployment (optional)
+- [ ] Add Dependabot/Renovate for dependency updates
+- [ ] Enable Gradle build cache
+- [ ] Add CI status badges to README
+
+---
+
+### Phase 10: Security Deep Dive (Weeks 17-18)
+
+#### Topic 10.1: Secure Storage & Encryption
+**Goal**: Master data protection at rest
+
+**Claude Code Instructions**:
+- Use Android Keystore for cryptographic keys
+- Implement EncryptedSharedPreferences correctly
+- Encrypt sensitive database content (SQLCipher)
+- Understand encryption algorithms (AES, RSA)
+- Handle key rotation and migration
+
+**Implementation Examples**:
+```kotlin
+// Android Keystore for secure key storage
+val keyGenerator = KeyGenerator.getInstance(
+    KeyProperties.KEY_ALGORITHM_AES,
+    "AndroidKeyStore"
+)
+
+val keyGenParameterSpec = KeyGenParameterSpec.Builder(
+    "MyKeyAlias",
+    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+)
+    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+    .setUserAuthenticationRequired(true)
+    .setUserAuthenticationValidityDurationSeconds(30)
+    .build()
+
+keyGenerator.init(keyGenParameterSpec)
+val secretKey = keyGenerator.generateKey()
+```
+
+**Encrypted Database (SQLCipher)**:
+```kotlin
+// build.gradle.kts
+implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+
+// Open encrypted database
+val passphrase = SQLiteDatabase.getBytes("your-secure-passphrase".toCharArray())
+val database = SQLiteDatabase.openOrCreateDatabase(
+    databaseFile,
+    passphrase,
+    null
+)
+```
+
+**Practice Tasks**:
+1. Encrypt user credentials in SharedPreferences
+2. Encrypt article drafts in Room database
+3. Implement secure file encryption
+4. Handle biometric authentication for decryption
+
+#### Topic 10.2: Network Security & SSL Pinning
+**Goal**: Secure network communications
+
+**Claude Code Instructions**:
+- Implement certificate pinning
+- Validate SSL certificates
+- Prevent man-in-the-middle attacks
+- Use network security configuration
+- Monitor certificate expiry
+
+**SSL Pinning with OkHttp**:
+```kotlin
+val certificatePinner = CertificatePinner.Builder()
+    .add("api.devhub.app", "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
+    .add("api.devhub.app", "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=") // Backup pin
+    .build()
+
+val client = OkHttpClient.Builder()
+    .certificatePinner(certificatePinner)
+    .build()
+```
+
+**Network Security Config** (`res/xml/network_security_config.xml`):
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.devhub.app</domain>
+        <pin-set expiration="2025-12-31">
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>
+```
+
+**Practice Tasks**:
+1. Implement SSL pinning for API calls
+2. Add certificate validation
+3. Test MITM attack prevention
+4. Set up certificate rotation strategy
+
+#### Topic 10.3: Authentication & Authorization
+**Goal**: Secure user identity and access control
+
+**Claude Code Instructions**:
+- Implement OAuth 2.0 / OpenID Connect
+- Handle JWT tokens securely
+- Implement token refresh flows
+- Use biometric authentication
+- Implement proper logout
+
+**JWT Handling**:
+```kotlin
+// Store JWT securely
+class AuthManager @Inject constructor(
+    private val securePrefs: EncryptedSharedPreferences,
+    private val keyStore: KeyStore
+) {
+    fun saveAuthToken(token: String) {
+        securePrefs.edit()
+            .putString(KEY_AUTH_TOKEN, token)
+            .putLong(KEY_TOKEN_EXPIRY, extractExpiry(token))
+            .apply()
+    }
+
+    fun isTokenValid(): Boolean {
+        val expiry = securePrefs.getLong(KEY_TOKEN_EXPIRY, 0)
+        return System.currentTimeMillis() < expiry
+    }
+
+    suspend fun refreshTokenIfNeeded() {
+        if (!isTokenValid()) {
+            val refreshToken = securePrefs.getString(KEY_REFRESH_TOKEN, null)
+            refreshToken?.let { token ->
+                val newToken = authApi.refreshToken(token)
+                saveAuthToken(newToken.accessToken)
+            }
+        }
+    }
+}
+```
+
+**Biometric Authentication**:
+```kotlin
+val biometricPrompt = BiometricPrompt(
+    activity,
+    executor,
+    object : BiometricPrompt.AuthenticationCallback() {
+        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+            // Access granted - decrypt sensitive data
+            decryptUserData(result.cryptoObject)
+        }
+
+        override fun onAuthenticationFailed() {
+            // Show error
+        }
+    }
+)
+
+val promptInfo = BiometricPrompt.PromptInfo.Builder()
+    .setTitle("Authenticate to access DevHub")
+    .setSubtitle("Use fingerprint or face")
+    .setNegativeButtonText("Cancel")
+    .build()
+
+biometricPrompt.authenticate(promptInfo, cryptoObject)
+```
+
+**Practice Tasks**:
+1. Implement OAuth 2.0 login flow
+2. Add JWT token management
+3. Implement biometric auth for sensitive actions
+4. Add session timeout handling
+
+#### Topic 10.4: Code Protection & Obfuscation
+**Goal**: Protect app code from reverse engineering
+
+**Claude Code Instructions**:
+- Configure ProGuard/R8 properly
+- Implement root detection
+- Use Play Integrity API (SafetyNet successor)
+- Detect tampering and repackaging
+- Obfuscate sensitive logic
+
+**ProGuard Rules** (`proguard-rules.pro`):
+```pro
+# Keep data models for Gson/kotlinx.serialization
+-keep class com.migpapps.devhub.data.models.** { *; }
+-keepclassmembers class com.migpapps.devhub.data.models.** { *; }
+
+# Keep API interfaces
+-keep interface com.migpapps.devhub.data.api.** { *; }
+
+# Aggressive obfuscation for security-sensitive code
+-repackageclasses 'obfuscated'
+-allowaccessmodification
+-overloadaggressively
+
+# Keep native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+```
+
+**Root Detection**:
+```kotlin
+object RootDetector {
+    fun isDeviceRooted(): Boolean {
+        return checkRootMethod1() ||
+               checkRootMethod2() ||
+               checkRootMethod3()
+    }
+
+    private fun checkRootMethod1(): Boolean {
+        val paths = arrayOf(
+            "/system/app/Superuser.apk",
+            "/sbin/su",
+            "/system/bin/su",
+            "/system/xbin/su"
+        )
+        return paths.any { File(it).exists() }
+    }
+
+    private fun checkRootMethod2(): Boolean {
+        return try {
+            Runtime.getRuntime().exec("su")
+            true
+        } catch (e: IOException) {
+            false
+        }
+    }
+
+    private fun checkRootMethod3(): Boolean {
+        val buildTags = Build.TAGS
+        return buildTags != null && buildTags.contains("test-keys")
+    }
+}
+```
+
+**Play Integrity API**:
+```kotlin
+class IntegrityChecker @Inject constructor(
+    private val context: Context
+) {
+    suspend fun checkAppIntegrity(): IntegrityResult {
+        val integrityManager = IntegrityManagerFactory.create(context)
+
+        val integrityTokenResponse = integrityManager
+            .requestIntegrityToken(
+                IntegrityTokenRequest.builder()
+                    .setCloudProjectNumber(CLOUD_PROJECT_NUMBER)
+                    .build()
+            )
+            .await()
+
+        return parseIntegrityToken(integrityTokenResponse.token())
+    }
+}
+```
+
+**Practice Tasks**:
+1. Configure ProGuard for release builds
+2. Implement root detection
+3. Add Play Integrity API checks
+4. Test obfuscated build
+5. Add tamper detection
+
+---
+
+**Practice Checklist for Phase 10**:
+- [ ] Encrypted SharedPreferences implemented
+- [ ] Database encryption with SQLCipher
+- [ ] SSL pinning configured
+- [ ] Network security config set up
+- [ ] OAuth 2.0 authentication flow
+- [ ] JWT token management
+- [ ] Biometric authentication
+- [ ] ProGuard/R8 configured
+- [ ] Root detection implemented
+- [ ] Play Integrity API integrated
+
+---
+
+### Phase 11: Performance & Advanced Topics (Weeks 19-20)
+
+#### Topic 11.1: Performance Profiling & Optimization
+**Goal**: Build fast, responsive apps
+
+**Claude Code Instructions**:
+- Use Android Profiler effectively
+- Identify and fix memory leaks
+- Optimize app startup time
+- Prevent ANRs (Application Not Responding)
+- Reduce APK/AAB size
+
+**Performance Profiling Tools**:
+- **CPU Profiler**: Identify expensive operations
+- **Memory Profiler**: Find memory leaks
+- **Network Profiler**: Optimize API calls
+- **Energy Profiler**: Battery optimization
+- **Layout Inspector**: UI performance
+
+**Memory Leak Detection**:
+```kotlin
+// Use LeakCanary in debug builds
+dependencies {
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+}
+
+// Monitor for leaks
+class DevHubApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        if (BuildConfig.DEBUG) {
+            LeakCanary.config = LeakCanary.config.copy(
+                dumpHeap = true,
+                retainedVisibleThreshold = 3
+            )
+        }
+    }
+}
+```
+
+**App Startup Optimization**:
+```kotlin
+// Use App Startup library
+class AnalyticsInitializer : Initializer<AnalyticsTracker> {
+    override fun create(context: Context): AnalyticsTracker {
+        return FirebaseAnalytics.getInstance(context)
+    }
+
+    override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()
+}
+
+// Lazy initialization
+class DevHubApplication : Application() {
+    val imageLoader by lazy {
+        Coil.imageLoader(this)
+    }
+}
+```
+
+**ANR Prevention**:
+```kotlin
+// Move long operations off main thread
+viewModelScope.launch(Dispatchers.IO) {
+    val articles = repository.fetchArticles() // Network call
+    withContext(Dispatchers.Main) {
+        _state.update { it.copy(articles = articles) }
+    }
+}
+
+// Use Flow for reactive updates
+repository.observeArticles()
+    .flowOn(Dispatchers.IO)
+    .collect { articles ->
+        _state.update { it.copy(articles = articles) }
+    }
+```
+
+**APK Size Reduction**:
+```kotlin
+android {
+    buildTypes {
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    // Enable resource shrinking
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+}
+```
+
+**Practice Tasks**:
+1. Profile app with Android Profiler
+2. Fix identified memory leaks
+3. Optimize app startup time (<2s)
+4. Reduce APK size by 30%
+5. Eliminate all ANRs
+
+#### Topic 11.2: Offline-First Architecture
+**Goal**: Build apps that work without internet
+
+**Claude Code Instructions**:
+- Implement local-first data strategy
+- Use WorkManager for background sync
+- Handle conflict resolution
+- Cache API responses intelligently
+- Queue offline actions
+
+**Offline-First Pattern**:
+```kotlin
+class ArticleRepository @Inject constructor(
+    private val localDataSource: ArticleLocalDataSource,
+    private val remoteDataSource: ArticleRemoteDataSource,
+    private val syncManager: SyncManager
+) {
+    // Always return local data first
+    fun getArticles(): Flow<List<Article>> = flow {
+        // 1. Emit cached data immediately
+        emitAll(localDataSource.observeArticles())
+
+        // 2. Fetch fresh data in background
+        try {
+            val freshArticles = remoteDataSource.fetchArticles()
+            localDataSource.saveArticles(freshArticles)
+            // Flow automatically emits updated data
+        } catch (e: IOException) {
+            // Network error - continue showing cached data
+            syncManager.scheduleRetry()
+        }
+    }
+
+    // Queue actions for offline execution
+    suspend fun likeArticle(articleId: String) {
+        // Optimistic update
+        localDataSource.likeArticle(articleId)
+
+        // Queue for server sync
+        if (networkMonitor.isOnline()) {
+            remoteDataSource.likeArticle(articleId)
+        } else {
+            syncManager.queueAction(LikeAction(articleId))
+        }
+    }
+}
+```
+
+**WorkManager for Background Sync**:
+```kotlin
+class SyncWorker(
+    context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result {
+        return try {
+            val pendingActions = actionQueue.getPendingActions()
+
+            pendingActions.forEach { action ->
+                when (action) {
+                    is LikeAction -> api.likeArticle(action.articleId)
+                    is CommentAction -> api.postComment(action.comment)
+                    // ... handle other actions
+                }
+                actionQueue.markCompleted(action.id)
+            }
+
+            Result.success()
+        } catch (e: Exception) {
+            Result.retry()
+        }
+    }
+}
+
+// Schedule periodic sync
+val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
+    .setConstraints(
+        Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+    )
+    .build()
+
+WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+    "article_sync",
+    ExistingPeriodicWorkPolicy.KEEP,
+    syncRequest
+)
+```
+
+**Conflict Resolution**:
+```kotlin
+data class Article(
+    val id: String,
+    val content: String,
+    val lastModified: Long,
+    val version: Int // For conflict detection
+)
+
+class ConflictResolver {
+    fun resolve(local: Article, remote: Article): Article {
+        return when {
+            local.version > remote.version -> local // Local is newer
+            remote.version > local.version -> remote // Remote is newer
+            local.lastModified > remote.lastModified -> local // Timestamp tiebreaker
+            else -> remote
+        }
+    }
+}
+```
+
+**Practice Tasks**:
+1. Implement offline article reading
+2. Queue likes/comments when offline
+3. Add background sync with WorkManager
+4. Handle conflict resolution
+5. Show sync status to users
+
+#### Topic 11.3: Advanced Compose Topics
+**Goal**: Master advanced Compose techniques
+
+**Claude Code Instructions**:
+- Create custom layouts
+- Use Canvas API for custom drawing
+- Build custom modifiers
+- Optimize recomposition
+- Create complex animations
+
+**Custom Layout**:
+```kotlin
+@Composable
+fun CustomFlowLayout(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints) }
+
+        var xPosition = 0
+        var yPosition = 0
+        var maxHeight = 0
+
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            placeables.forEach { placeable ->
+                if (xPosition + placeable.width > constraints.maxWidth) {
+                    xPosition = 0
+                    yPosition += maxHeight
+                    maxHeight = 0
+                }
+
+                placeable.placeRelative(x = xPosition, y = yPosition)
+                xPosition += placeable.width
+                maxHeight = max(maxHeight, placeable.height)
+            }
+        }
+    }
+}
+```
+
+**Canvas API - Custom Drawing**:
+```kotlin
+@Composable
+fun ArticleProgressChart(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier.size(200.dp)) {
+        val sweepAngle = 360f * progress
+
+        // Background arc
+        drawArc(
+            color = Color.LightGray,
+            startAngle = -90f,
+            sweepAngle = 360f,
+            useCenter = false,
+            style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round)
+        )
+
+        // Progress arc
+        drawArc(
+            color = Color.Blue,
+            startAngle = -90f,
+            sweepAngle = sweepAngle,
+            useCenter = false,
+            style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round)
+        )
+
+        // Center text
+        drawContext.canvas.nativeCanvas.drawText(
+            "${(progress * 100).toInt()}%",
+            center.x,
+            center.y,
+            android.graphics.Paint().apply {
+                textSize = 48f
+                textAlign = android.graphics.Paint.Align.CENTER
+            }
+        )
+    }
+}
+```
+
+**Custom Modifier**:
+```kotlin
+fun Modifier.shimmerEffect(): Modifier = composed {
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val transition = rememberInfiniteTransition()
+    val startOffsetX by transition.animateFloat(
+        initialValue = -2 * size.width.toFloat(),
+        targetValue = 2 * size.width.toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000)
+        )
+    )
+
+    background(
+        brush = Brush.linearGradient(
+            colors = listOf(
+                Color.LightGray.copy(alpha = 0.6f),
+                Color.LightGray.copy(alpha = 0.2f),
+                Color.LightGray.copy(alpha = 0.6f),
+            ),
+            start = Offset(startOffsetX, 0f),
+            end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
+        )
+    )
+        .onGloballyPositioned { size = it.size }
+}
+```
+
+**Practice Tasks**:
+1. Create custom flow layout for tags
+2. Draw custom chart with Canvas
+3. Build shimmer loading effect
+4. Optimize list with keys and remember
+
+#### Topic 11.4: Animations & Motion
+**Goal**: Create delightful user experiences
+
+**Claude Code Instructions**:
+- Implement Compose animations
+- Use MotionLayout for complex transitions
+- Create shared element transitions
+- Add micro-interactions
+- Follow Material Motion guidelines
+
+**Compose Animations**:
+```kotlin
+@Composable
+fun AnimatedArticleCard(article: Article) {
+    var expanded by remember { mutableStateOf(false) }
+    val extraPadding by animateDpAsState(
+        targetValue = if (expanded) 48.dp else 0.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    Card(
+        modifier = Modifier
+            .padding(extraPadding)
+            .clickable { expanded = !expanded }
+    ) {
+        Column {
+            Text(article.title)
+            AnimatedVisibility(visible = expanded) {
+                Text(article.content)
+            }
+        }
+    }
+}
+```
+
+**Shared Element Transition**:
+```kotlin
+@Composable
+fun ArticleListScreen(navController: NavController) {
+    LazyColumn {
+        items(articles) { article ->
+            SharedTransitionLayout {
+                ArticleCard(
+                    article = article,
+                    modifier = Modifier.sharedElement(
+                        rememberSharedContentState(key = "article-${article.id}"),
+                        animatedVisibilityScope = this
+                    )
+                )
+            }
+        }
+    }
+}
+```
+
+**Gesture Animations**:
+```kotlin
+@Composable
+fun SwipeToDeleteArticle(
+    article: Article,
+    onDelete: () -> Unit
+) {
+    val offsetX = remember { Animatable(0f) }
+
+    Box(
+        modifier = Modifier
+            .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        if (offsetX.value < -300f) {
+                            onDelete()
+                        } else {
+                            offsetX.animateTo(0f)
+                        }
+                    },
+                    onHorizontalDrag = { _, dragAmount ->
+                        offsetX.snapTo(offsetX.value + dragAmount)
+                    }
+                )
+            }
+    ) {
+        ArticleCard(article)
+    }
+}
+```
+
+**Practice Tasks**:
+1. Add enter/exit animations to screens
+2. Implement pull-to-refresh animation
+3. Create swipe-to-delete gesture
+4. Add shared element transitions
+5. Build custom loading animations
+
+---
+
+**Practice Checklist for Phase 11**:
+- [ ] Profile app performance
+- [ ] Fix all memory leaks
+- [ ] Optimize app startup
+- [ ] Implement offline-first architecture
+- [ ] Add background sync with WorkManager
+- [ ] Create custom Compose layout
+- [ ] Use Canvas for custom drawing
+- [ ] Add animations to key interactions
+- [ ] Implement shared element transitions
+- [ ] Polish micro-interactions
 
 ---
 

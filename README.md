@@ -105,6 +105,16 @@ This project is **specifically designed to be built using the [Claude Code](http
 - ✅ Analytics tracking
 - ✅ Intents & Intent Filters
 
+#### Security
+- ✅ Secure data storage (EncryptedSharedPreferences)
+- ✅ Android Keystore & encryption
+- ✅ SSL/Certificate pinning
+- ✅ OAuth 2.0 & JWT authentication
+- ✅ Biometric authentication
+- ✅ ProGuard/R8 & code obfuscation
+- ✅ Root detection & app integrity
+- ✅ API key management
+
 #### Build System
 - ✅ Gradle Kotlin DSL
 - ✅ Multi-module architecture
@@ -112,10 +122,13 @@ This project is **specifically designed to be built using the [Claude Code](http
 - ✅ Dependency management
 
 #### Advanced Topics
+- ✅ Kotlin Multiplatform Mobile (KMM)
 - ✅ Creating an SDK
 - ✅ Kotlin delegation
-- ✅ ProGuard/R8 optimization
-- ⬜ Kotlin Multiplatform Mobile (KMM) - planned
+- ✅ CI/CD with GitHub Actions
+- ✅ Performance profiling & optimization
+- ✅ Offline-first architecture
+- ✅ Advanced Compose layouts & animations
 
 ## 🏗️ Project Structure
 
@@ -225,7 +238,7 @@ DevHub/
    - Navigate to the cloned directory
 
 3. **Install Claude Code** (Recommended)
-   - Follow the [official installation guide](https://docs.claude.com/en/docs/claude-code/installation)
+   - Follow the [official installation guide](https://docs.claude.com/en/docs/claude-code/overview)
    - Open the project in Claude Code
    - The project instructions in `.claude/project-instructions.md` will **automatically load**
    - **Configure security settings** (see below before starting)
@@ -380,7 +393,7 @@ Example prompts:
 
 ## 📖 Training Structure
 
-This project follows an **8-phase training programme** covering everything from architecture to cross-platform development:
+This project follows an **11-phase comprehensive training programme** covering everything from architecture to security and performance:
 
 | Phase | Topics | Duration |
 |-------|--------|----------|
@@ -389,9 +402,12 @@ This project follows an **8-phase training programme** covering everything from 
 | **Phase 3** | Dependency Injection (Hilt, SDK creation) | Weeks 5-6 |
 | **Phase 4** | Reactive Programming (Coroutines, Flow) | Weeks 7-8 |
 | **Phase 5** | Quality & Testing (TDD, Accessibility) | Weeks 9-10 |
-| **Phase 6** | System Integration (FCM, Intents, Analytics) | Weeks 11-12 |
+| **Phase 6** | System Integration & Security Intro (FCM, Intents, Analytics, Security Basics) | Weeks 11-12 |
 | **Phase 7** | Build System (Gradle, Delegation) | Weeks 13-14 |
 | **Phase 8** | Cross-Platform (KMM) | Weeks 14-15 |
+| **Phase 9** | CI/CD & DevOps (GitHub Actions, Automation, Quality) | Weeks 15-16 |
+| **Phase 10** | Security Deep Dive (Encryption, SSL Pinning, Auth, Code Protection) | Weeks 17-18 |
+| **Phase 11** | Performance & Advanced Topics (Profiling, Offline-First, Animations, Advanced Compose) | Weeks 19-20 |
 
 **Full details**: See `.claude/project-instructions.md` or `PROGRESS_TRACKER.md`
 
