@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./local.properties)",
+      "Read(./app/google-services.json)",
+      "Read(**/*.jks)",
+      "Read(**/*.keystore)",
+      "Read(./secrets/**)",
+      "Read(./.git/**)"
+    ]
+  }
+}

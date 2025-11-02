@@ -1,0 +1,689 @@
+# Android Developer Training Programme - Claude Code Guide
+
+## Project: DevHub - Developer Community App
+A comprehensive training project covering modern Android development practices.
+
+---
+
+## 📘 Using Claude Code
+
+**Important:** When users ask about Claude Code features, commands, shortcuts, or workflows, direct them to **`CLAUDE_CHEATSHEET.md`** in the project root. This comprehensive guide covers:
+- Privacy & data sharing
+- Keyboard shortcuts and commands
+- Permission modes
+- Custom slash commands
+- Memory vs Settings
+- Security features
+- Best practices
+
+---
+
+## 🎯 Project Structure & Learning Modules
+
+### Module Overview
+Each feature module focuses on specific Android concepts:
+
+```
+app/
+├── core/                          # Core utilities, base classes
+│   ├── network/                   # Networking (Retrofit, OkHttp)
+│   ├── database/                  # Room database
+│   ├── analytics/                 # Tracking implementation
+│   └── accessibility/             # Accessibility utilities
+├── core-ui/                       # Shared UI components (Compose)
+├── feature/
+│   ├── feed/                      # Article feed (MVI + Compose)
+│   ├── profile/                   # User profile (MVVM + Fragments)
+│   ├── editor/                    # Content editor (TDD focused)
+│   ├── notifications/             # Push notifications
+│   └── search/                    # Search functionality
+├── sdk-devhub/                    # Public SDK module
+└── shared/                        # KMM shared code (optional)
+```
+
+---
+
+## 📚 Training Phases & Implementation Guide
+
+### Phase 1: Architecture Foundation (Weeks 1-2)
+
+#### Topic 1.1: MVVM vs MVI Architecture
+**Goal**: Implement both patterns in different features to understand trade-offs
+
+**Feature: Profile (MVVM)**
+- Use MVVM for the profile feature
+- ViewModel with LiveData/StateFlow
+- Single state object vs multiple LiveData streams
+- Handle user actions through methods
+
+**Feature: Feed (MVI)**
+- Use MVI for the feed feature
+- Single immutable state
+- Sealed class for user intents
+- Unidirectional data flow
+
+**Claude Code Instructions**:
+- When working on `feature/profile`, enforce MVVM patterns
+- When working on `feature/feed`, enforce MVI patterns
+- Always explain the architectural choice for each feature
+- Suggest refactoring opportunities between patterns
+
+**Key Files**:
+```
+feature/profile/ProfileViewModel.kt        # MVVM example
+feature/feed/FeedViewModel.kt              # MVI example
+feature/feed/FeedContract.kt               # MVI state/intent/effect
+```
+
+#### Topic 1.2: ViewModels & Lifecycle
+**Focus Areas**:
+- ViewModel scope (ViewModelScope, lifecycleScope)
+- SavedStateHandle for process death
+- ViewModelFactory with Hilt
+- Sharing ViewModels between fragments
+
+**Practice Tasks**:
+1. Implement SavedStateHandle in ProfileViewModel
+2. Create shared ViewModel for multi-step flows
+3. Handle configuration changes properly
+
+---
+
+### Phase 2: Modern UI Development (Weeks 3-4)
+
+#### Topic 2.1: Jetpack Compose
+**Goal**: Build modern UI with Compose fundamentals
+
+**Features to Build**:
+- Feed screen (LazyColumn, pull-to-refresh)
+- Article detail (responsive layout)
+- Comments section (nested composition)
+- Custom theme system
+
+**Claude Code Instructions**:
+- Prioritise Compose for all new UI
+- Use remember, rememberSaveable appropriately
+- Implement proper state hoisting
+- Create reusable composable functions in core-ui
+- Always consider recomposition performance
+
+**Key Concepts to Practice**:
+- State management (remember, mutableStateOf)
+- Side effects (LaunchedEffect, DisposableEffect)
+- CompositionLocal for theme/dependencies
+- Modifier chains and custom modifiers
+- Preview annotations with different states
+
+#### Topic 2.2: Fragments (Legacy Understanding)
+**Goal**: Understand fragments for maintaining existing code
+
+**Features Using Fragments**:
+- Profile screen (demonstrate legacy approach)
+- Settings screen
+
+**Practice Tasks**:
+1. Fragment lifecycle methods
+2. FragmentManager transactions
+3. Communication via ViewModel
+4. Safe Args navigation
+5. Plan migration path to Compose
+
+#### Topic 2.3: Navigation
+**Both Navigation Component and Compose Navigation**
+
+**Implementation**:
+```
+navigation/
+├── NavGraph.kt                    # Compose navigation
+├── fragments/                     # XML navigation graph
+└── deeplinks/                     # Deep link handling
+```
+
+**Practice Tasks**:
+1. Set up Compose Navigation
+2. Implement deep linking
+3. Pass complex objects between screens
+4. Handle back stack properly
+
+---
+
+### Phase 3: Dependency Injection (Weeks 5-6)
+
+#### Topic 3.1: Dagger-Hilt
+**Goal**: Proper DI setup across all modules
+
+**Claude Code Instructions**:
+- Always use Hilt for dependency injection
+- Create proper module structures (NetworkModule, DatabaseModule, etc.)
+- Use appropriate scopes (@Singleton, @ViewModelScoped, @ActivityRetainedScoped)
+- Inject ViewModels using @HiltViewModel
+- Provide test doubles in test modules
+
+**Module Structure**:
+```kotlin
+// NetworkModule.kt
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+    @Provides
+    @Singleton
+    fun provideRetrofit(): Retrofit { /* ... */ }
+}
+
+// ViewModels
+@HiltViewModel
+class FeedViewModel @Inject constructor(
+    private val repository: FeedRepository
+) : ViewModel()
+```
+
+**Practice Areas**:
+1. Multi-module Hilt setup
+2. Providing different implementations (dev vs prod)
+3. Assisted injection for factories
+4. Testing with Hilt
+
+#### Topic 3.2: Creating an SDK
+**Goal**: Extract core functionality into a reusable SDK
+
+**SDK Module**: `sdk-devhub`
+- Authentication
+- API client
+- Data models
+- Public interfaces
+
+**Claude Code Instructions**:
+- Keep SDK module framework-agnostic (no Android dependencies where possible)
+- Design clean public API
+- Use semantic versioning
+- Provide clear documentation
+- Include consumer ProGuard rules
+
+**SDK Structure**:
+```
+sdk-devhub/
+├── src/main/
+│   ├── java/com/devhub/sdk/
+│   │   ├── DevHubClient.kt           # Main entry point
+│   │   ├── auth/                      # Authentication
+│   │   ├── api/                       # API interfaces
+│   │   └── models/                    # Data models
+│   └── proguard-rules.pro
+└── build.gradle.kts                   # Publishing config
+```
+
+---
+
+### Phase 4: Reactive Programming (Weeks 7-8)
+
+#### Topic 4.1: Coroutines
+**Goal**: Master async programming with coroutines
+
+**Claude Code Instructions**:
+- Use `suspend` functions for async operations
+- Launch coroutines in appropriate scopes
+- Use proper dispatchers (IO, Default, Main)
+- Implement structured concurrency
+- Handle cancellation properly
+- Use `supervisorScope` when appropriate
+
+**Practice Areas**:
+1. Repository layer with suspend functions
+2. Parallel API calls with async/await
+3. Exception handling with try-catch and CoroutineExceptionHandler
+4. Flow operators (map, filter, combine, etc.)
+5. Testing coroutines with runTest
+
+#### Topic 4.2: StateFlow vs Flow vs SharedFlow vs LiveData
+**Goal**: Choose the right reactive type for each use case
+
+**Usage Guidelines**:
+- **StateFlow**: UI state (always has value, conflation)
+- **SharedFlow**: One-time events (navigation, toasts)
+- **Flow**: Streams of data (database queries, API responses)
+- **LiveData**: Legacy support only
+
+**Claude Code Instructions**:
+```kotlin
+// ViewModel pattern
+class FeedViewModel : ViewModel() {
+    // UI State - StateFlow
+    private val _state = MutableStateFlow(FeedState())
+    val state: StateFlow<FeedState> = _state.asStateFlow()
+
+    // One-time events - SharedFlow
+    private val _events = MutableSharedFlow<FeedEvent>()
+    val events: SharedFlow<FeedEvent> = _events.asSharedFlow()
+
+    // Data streams - Flow
+    val articles: Flow<List<Article>> = repository.observeArticles()
+}
+```
+
+**Practice Tasks**:
+1. Convert LiveData to StateFlow
+2. Implement event handling with SharedFlow
+3. Use Flow operators for data transformation
+4. Handle configuration changes properly
+
+---
+
+### Phase 5: Quality & Testing (Weeks 9-10)
+
+#### Topic 5.1: Test-Driven Development (TDD)
+**Goal**: Write tests before implementation
+
+**Claude Code Instructions**:
+- For new features, write tests FIRST
+- Follow Red-Green-Refactor cycle
+- Test business logic thoroughly
+- Use descriptive test names (Given-When-Then)
+
+**Feature: Editor Module (TDD-focused)**
+Build the content editor using strict TDD:
+1. Write failing test
+2. Implement minimum code to pass
+3. Refactor
+4. Repeat
+
+**Test Structure**:
+```
+test/
+├── unit/
+│   ├── viewmodel/                 # ViewModel tests
+│   ├── repository/                # Repository tests
+│   └── usecase/                   # Use case tests
+├── integration/
+│   └── database/                  # Database tests
+└── ui/
+    └── compose/                   # Compose UI tests
+```
+
+#### Topic 5.2: Android Testing
+**Comprehensive testing strategy**
+
+**Claude Code Instructions**:
+```kotlin
+// Unit Tests
+@Test
+fun `when user loads feed, then articles are displayed`() = runTest {
+    // Given
+    val articles = listOf(/* test data */)
+    coEvery { repository.getArticles() } returns flowOf(articles)
+
+    // When
+    viewModel.loadFeed()
+
+    // Then
+    assertEquals(articles, viewModel.state.value.articles)
+}
+
+// Compose UI Tests
+@Test
+fun feedScreen_displaysArticles() {
+    composeTestRule.setContent {
+        FeedScreen(articles = testArticles)
+    }
+
+    composeTestRule.onNodeWithText("Test Article").assertIsDisplayed()
+}
+```
+
+**Testing Checklist**:
+- [ ] Unit tests for ViewModels (>80% coverage)
+- [ ] Unit tests for repositories and use cases
+- [ ] Integration tests for database
+- [ ] UI tests for critical user flows
+- [ ] Screenshot tests (optional)
+
+#### Topic 5.3: Accessibility
+**Goal**: Make the app usable for everyone
+
+**Claude Code Instructions**:
+- Always add contentDescription to images/icons
+- Ensure minimum touch target size (48dp)
+- Use semantic Compose modifiers
+- Test with TalkBack
+- Support system font scaling
+- Maintain colour contrast ratios (WCAG AA)
+
+**Compose Accessibility**:
+```kotlin
+@Composable
+fun ArticleCard(article: Article) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = "Article: ${article.title}"
+                onClick(label = "Read article") { /* ... */ }
+            }
+    ) {
+        // Content
+    }
+}
+```
+
+**Accessibility Checklist**:
+- [ ] All images have content descriptions
+- [ ] Interactive elements have semantic labels
+- [ ] Navigation is keyboard/switch accessible
+- [ ] Content respects font scaling
+- [ ] TalkBack tested on key flows
+
+---
+
+### Phase 6: System Integration (Weeks 11-12)
+
+#### Topic 6.1: Intents & Intent Filters
+**Goal**: Handle system integration and deep links
+
+**Practice Areas**:
+1. Explicit intents (start activities)
+2. Implicit intents (share, view, etc.)
+3. Intent filters in manifest
+4. App Links / Deep Links
+5. Receiving shared content
+
+**Implementation**:
+```xml
+<!-- AndroidManifest.xml -->
+<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="https"
+          android:host="devhub.app"
+          android:pathPrefix="/article" />
+</intent-filter>
+```
+
+#### Topic 6.2: Push Notifications
+**Goal**: Implement FCM notifications
+
+**Claude Code Instructions**:
+- Use Firebase Cloud Messaging
+- Handle notifications in foreground/background
+- Create notification channels (Android O+)
+- Implement custom notification layouts
+- Handle notification actions
+- Track notification analytics
+
+**Implementation Structure**:
+```
+notifications/
+├── NotificationHelper.kt          # Notification builder
+├── DevHubMessagingService.kt      # FCM service
+├── NotificationChannels.kt        # Channel definitions
+└── NotificationWorker.kt          # Background processing
+```
+
+#### Topic 6.3: Tracking & Analytics
+**Goal**: Implement event tracking
+
+**Claude Code Instructions**:
+- Create analytics abstraction layer
+- Track key user events
+- Respect user privacy (GDPR)
+- Use Firebase Analytics or similar
+- Create debug/release implementations
+
+**Analytics Pattern**:
+```kotlin
+interface AnalyticsTracker {
+    fun trackEvent(event: AnalyticsEvent)
+    fun setUserProperty(key: String, value: String)
+}
+
+sealed class AnalyticsEvent {
+    data class ArticleViewed(val articleId: String) : AnalyticsEvent()
+    data class ArticleShared(val articleId: String) : AnalyticsEvent()
+    object FeedRefreshed : AnalyticsEvent()
+}
+```
+
+---
+
+### Phase 7: Build System (Weeks 13-14)
+
+#### Topic 7.1: Gradle
+**Goal**: Master build configuration
+
+**Claude Code Instructions**:
+- Use Kotlin DSL (build.gradle.kts)
+- Create buildSrc for dependency management
+- Set up build variants (debug, release, staging)
+- Configure product flavours if needed
+- Implement ProGuard/R8 rules
+- Optimise build performance
+
+**Build Structure**:
+```
+buildSrc/
+├── src/main/kotlin/
+│   ├── Dependencies.kt            # Version catalog
+│   ├── AndroidConfig.kt           # Shared config
+│   └── plugins/                   # Custom plugins
+```
+
+**Gradle Best Practices**:
+1. Use version catalogs
+2. Enable build cache
+3. Configure parallel execution
+4. Use configuration cache
+5. Minimise dependencies
+
+#### Topic 7.2: Kotlin Delegation
+**Goal**: Use delegation for cleaner code
+
+**Claude Code Instructions**:
+- Use property delegation (lazy, observable, delegates)
+- Implement class delegation for composition
+- Create custom delegates for common patterns
+
+**Practical Examples**:
+```kotlin
+// Property delegation
+class ProfileViewModel : ViewModel() {
+    private val preferences by inject<UserPreferences>()
+
+    val username by lazy {
+        preferences.getUsername()
+    }
+}
+
+// Class delegation
+class CachingRepository(
+    private val remote: RemoteDataSource,
+    private val local: LocalDataSource
+) : Repository by local {
+    // Override only what's needed
+    override suspend fun getArticles() =
+        local.getArticles().ifEmpty {
+            remote.getArticles().also { local.save(it) }
+        }
+}
+
+// Custom delegate
+class PreferenceDelegate<T>(
+    private val key: String,
+    private val defaultValue: T
+) : ReadWriteProperty<Any?, T> {
+    // Implementation
+}
+```
+
+---
+
+### Phase 8: Cross-Platform (Weeks 14-15)
+
+#### Topic 8.1: Kotlin Multiplatform Mobile (KMM)
+**Goal**: Share business logic across platforms
+
+**Claude Code Instructions**:
+- Extract business logic to `shared` module
+- Keep platform-specific code separate
+- Use expect/actual for platform APIs
+- Share data models, repositories, use cases
+
+**Shared Module Structure**:
+```
+shared/
+├── commonMain/
+│   ├── kotlin/
+│   │   ├── domain/                # Business logic
+│   │   ├── data/                  # Repositories
+│   │   └── models/                # Data models
+├── androidMain/
+│   └── kotlin/                    # Android-specific
+└── iosMain/
+    └── kotlin/                    # iOS-specific (future)
+```
+
+---
+
+## 🎨 Coding Standards & Best Practices
+
+### General Guidelines
+1. **Kotlin Conventions**: Follow official Kotlin coding conventions
+2. **Clean Architecture**: Separate concerns (data, domain, presentation)
+3. **SOLID Principles**: Keep code maintainable and testable
+4. **Immutability**: Prefer immutable data classes
+5. **Null Safety**: Avoid nullable types when possible
+
+### File Organisation
+```kotlin
+// Order: Properties -> Init blocks -> Functions -> Companion
+class MyClass {
+    private val property = "value"
+
+    init { }
+
+    fun publicFunction() { }
+
+    private fun privateFunction() { }
+
+    companion object { }
+}
+```
+
+### Naming Conventions
+- Classes: PascalCase
+- Functions/Variables: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Sealed classes for states: `sealed class FeedState`
+- Composable functions: PascalCase
+
+### Documentation
+- KDoc for public APIs
+- Inline comments for complex logic
+- README for each module
+- Architecture Decision Records (ADR) for major decisions
+
+---
+
+## 🚀 Getting Started Workflow
+
+### For Each New Feature:
+1. **Design**: Think about architecture (MVVM vs MVI?)
+2. **Test First**: Write tests (TDD approach)
+3. **Implement**: Build the feature
+4. **Refactor**: Clean up code
+5. **Review**: Check against best practices
+6. **Document**: Add documentation
+
+### Claude Code Interaction:
+- Ask me to review your architecture before implementing
+- Request code reviews with specific focus (testing, accessibility, etc.)
+- Ask for refactoring suggestions
+- Request explanations of patterns and concepts
+- Get help debugging issues
+
+---
+
+## 📋 Progress Tracking
+
+### Completion Checklist
+Mark topics as you complete them:
+
+- [ ] MVVM vs MVI (both patterns implemented)
+- [ ] ViewModels & Lifecycle
+- [ ] Jetpack Compose
+- [ ] Fragments
+- [ ] Navigation
+- [ ] Dagger-Hilt
+- [ ] Creating an SDK
+- [ ] Coroutines
+- [ ] StateFlow vs Flow vs SharedFlow vs LiveData
+- [ ] TDD
+- [ ] Android Testing
+- [ ] Accessibility
+- [ ] Intents & Intent Filters
+- [ ] Push Notifications
+- [ ] Tracking & Analytics
+- [ ] Gradle
+- [ ] Kotlin Delegation
+- [ ] KMM
+
+### Interview Readiness
+For each topic, ensure you can:
+- [ ] Explain the concept clearly
+- [ ] Discuss trade-offs and alternatives
+- [ ] Show practical implementation
+- [ ] Describe real-world use cases
+- [ ] Handle follow-up questions
+
+---
+
+## 💡 Tips for Maximum Learning
+
+1. **Build incrementally**: Don't try to implement everything at once
+2. **Refactor often**: Revisit code and improve it
+3. **Write tests**: They'll save you time and teach you proper design
+4. **Read code**: Check out popular open-source Android apps
+5. **Stay updated**: Android development evolves rapidly
+6. **Ask questions**: Use me to clarify concepts and review code
+7. **Document learnings**: Keep notes on "aha moments"
+
+---
+
+## 🤝 Working with Claude Code
+
+### Effective Prompts:
+- "Review this ViewModel implementation for MVI best practices"
+- "Help me write tests for this repository using TDD"
+- "Explain why we should use StateFlow instead of LiveData here"
+- "Refactor this code to use proper Hilt injection"
+- "Make this composable more accessible"
+- "Set up a new feature module for [feature name]"
+
+### Code Review Focus Areas:
+- Architecture patterns compliance
+- Testing coverage
+- Accessibility
+- Performance considerations
+- Memory leaks
+- Proper resource handling
+- Security best practices
+
+---
+
+## 📚 Additional Resources
+
+### When to Deep Dive:
+- Official Android documentation
+- Kotlin coroutines guide
+- Compose documentation
+- Hilt/Dagger documentation
+- Testing best practices
+
+### Community:
+- Android Dev Reddit
+- Kotlin Slack
+- Stack Overflow
+- Medium articles
+- Conference talks (Android Dev Summit, KotlinConf)
+
+---
+
+**Remember**: This is a training project. Don't be afraid to experiment, make mistakes, and refactor. The goal is learning, not perfection!
